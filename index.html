@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bébé en Voyage 👶✈️ — Écran TV</title>
+<link rel="stylesheet" href="style.css">
+<script src="vendor/peerjs.min.js"></script>
+<script src="vendor/qrcode.js"></script>
+</head>
+<body class="tv">
+
+  <!-- ÉCRAN LOBBY -->
+  <div id="lobby" class="screen">
+    <header class="lobby-header">
+      <h1>👶 Bébé en Voyage ✈️</h1>
+      <p class="subtitle">Aidez les bébés à arriver au bout du voyage pour découvrir la grande surprise&nbsp;!</p>
+    </header>
+
+    <div class="lobby-body">
+      <div class="join-panel card">
+        <h2>📱 Rejoindre la partie</h2>
+        <div id="qrcode"></div>
+        <p class="room-code">Code&nbsp;: <strong id="roomCodeLabel">····</strong></p>
+        <p class="join-url" id="joinUrlLabel"></p>
+        <p id="connStatus" class="conn-status">Connexion au serveur…</p>
+      </div>
+
+      <div class="players-panel card">
+        <h2>👥 Joueurs (<span id="playerCount">0</span>)</h2>
+        <ul id="playerList" class="player-list"></ul>
+        <p class="hint">Scannez le QR code avec votre téléphone pour rejoindre.</p>
+        <button id="addTestPlayer" class="btn btn-small">+ Joueur clavier (Espace pour sauter)</button>
+      </div>
+
+      <div class="settings-panel card">
+        <h2>⚙️ Réglages</h2>
+        <label>Longueur du voyage
+          <select id="setLength">
+            <option value="court">Court (~30 s)</option>
+            <option value="moyen" selected>Moyen (~1 min)</option>
+            <option value="long">Long (~2 min)</option>
+          </select>
+        </label>
+        <label>Difficulté
+          <select id="setDifficulty">
+            <option value="facile" selected>Facile</option>
+            <option value="moyen">Moyen</option>
+            <option value="difficile">Difficile</option>
+          </select>
+        </label>
+        <label>La surprise 🤫 <span class="hint-inline">(tapez «&nbsp;garcon&nbsp;» ou «&nbsp;fille&nbsp;», c'est masqué)</span>
+          <input type="password" id="setReveal" placeholder="garcon / fille" autocomplete="off">
+        </label>
+        <p id="revealStatus" class="reveal-status">❌ Surprise non définie</p>
+        <button id="startBtn" class="btn btn-big" disabled>🚀 Lancer le voyage&nbsp;!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN JEU -->
+  <div id="game" class="screen hidden">
+    <canvas id="gameCanvas"></canvas>
+    <div id="banner" class="banner hidden"></div>
+  </div>
+
+  <!-- ÉCRAN RÉVÉLATION -->
+  <div id="reveal" class="screen hidden">
+    <div class="reveal-content">
+      <h1 id="revealTitle">🎉 FÉLICITATIONS ! 🎉</h1>
+      <p id="revealSubtitle">Tous les bébés sont arrivés au bout du voyage…</p>
+      <div id="revealDrum" class="reveal-drum">Le bébé sera…</div>
+      <div id="revealAnswer" class="reveal-answer hidden"></div>
+      <button id="replayBtn" class="btn btn-big hidden">🔄 Rejouer</button>
+    </div>
+    <canvas id="confettiCanvas"></canvas>
+  </div>
+
+<script src="game.js"></script>
+<script src="host.js"></script>
+</body>
+</html>

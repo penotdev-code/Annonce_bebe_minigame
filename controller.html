@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Bébé en Voyage 👶 — Manette</title>
+<link rel="stylesheet" href="style.css">
+<script src="vendor/peerjs.min.js"></script>
+</head>
+<body class="phone">
+
+  <!-- ÉCRAN CONNEXION -->
+  <div id="joinScreen" class="pscreen">
+    <h1>👶✈️</h1>
+    <h2>Bébé en Voyage</h2>
+    <input type="text" id="roomInput" placeholder="Code de la salle" maxlength="4" autocapitalize="characters" autocomplete="off">
+    <input type="text" id="nameInput" placeholder="Ton prénom" maxlength="12" autocomplete="off">
+    <button id="joinBtn" class="btn btn-big">Rejoindre 🚀</button>
+    <p id="joinStatus" class="join-status"></p>
+  </div>
+
+  <!-- ÉCRAN MANETTE -->
+  <div id="padScreen" class="pscreen hidden">
+    <div id="padHeader">
+      <span id="padName"></span>
+      <span id="padStatus">En attente du lancement…</span>
+    </div>
+    <div id="padBaby">👶</div>
+    <button id="flapBtn">SAUTER&nbsp;!</button>
+  </div>
+
+<script src="controller.js"></script>
+</body>
+</html>
