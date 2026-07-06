@@ -1,11 +1,14 @@
 /* ============================================================
-   Bébé en Voyage — manette téléphone
+   Bébé en Voyage — téléphone joueur
+   Affiche le jeu en direct (reçu de la TV) et saute quand on
+   touche l'écran. À jouer en mode paysage.
    ============================================================ */
 
 const $ = id => document.getElementById(id);
 
 let peer = null;
 let conn = null;
+let remoteGame = null;
 let myColor = '#ff6b6b';
 
 // pré-remplissage depuis le QR code (?room=XXXX)
@@ -26,6 +29,7 @@ function join() {
   localStorage.setItem('bebe-name', name);
   setJoinStatus('Connexion…');
   $('joinBtn').disabled = true;
+  goLandscapeFullscreen(); // doit être déclenché par le geste de l'utilisateur
 
   peer = new Peer(window.PEER_OPTS || undefined);
   peer.on('open', () => {
@@ -40,87 +44,124 @@ function join() {
   });
 }
 
+async function goLandscapeFullscreen() {
+  try {
+    await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    if (screen.orientation && screen.orientation.lock) {
+      await screen.orientation.lock('landscape');
+    }
+  } catch (e) { /* iOS ne le permet pas : l'indice "tourne ton téléphone" prend le relais */ }
+}
+
 function handleMessage(msg) {
   switch (msg.type) {
     case 'joined':
       myColor = msg.color;
-      $('padName').textContent = '👶 ' + msg.name;
-      $('flapBtn').style.background = myColor;
-      document.body.style.background = myColor + '33';
+      $('hudName').textContent = '👶 ' + msg.name;
+      $('hudName').style.background = myColor;
       $('joinScreen').classList.add('hidden');
-      $('padScreen').classList.remove('hidden');
-      setPadStatus('En attente du lancement… 🕐');
+      $('playScreen').classList.remove('hidden');
+      if (!remoteGame) {
+        remoteGame = new Game($('playCanvas'), 'remote');
+        remoteGame.selfId = peer.id;
+        remoteGame.resize();
+      }
+      setStatus('En attente du lancement… 🕐');
       requestWakeLock();
       break;
     case 'rejected':
       backToJoin(msg.reason);
       break;
+    case 'course':
+      if (remoteGame) remoteGame.setCourse(msg.course);
+      break;
+    case 'st':
+      if (remoteGame) remoteGame.applyState(msg.st);
+      break;
     case 'phase':
-      onPhase(msg.phase);
+      onPhase(msg);
       break;
     case 'youDied':
-      setPadStatus('💥 Tu es tombé·e ! Tout le monde recommence…');
+      setStatus('💥 Tu es tombé·e !');
       vibrate([120, 60, 120]);
-      $('padBaby').textContent = '😵';
       break;
     case 'reveal':
-      setPadStatus(msg.answer === 'garcon' ? "C'EST UN GARÇON ! 💙" : "C'EST UNE FILLE ! 🩷");
-      document.body.style.background = msg.answer === 'garcon' ? '#bfdbfe' : '#fbcfe8';
-      $('padBaby').textContent = '🎉';
-      vibrate([80, 50, 80, 50, 200]);
+      showReveal(msg.answer);
       break;
   }
 }
 
-function onPhase(phase) {
-  switch (phase) {
+function onPhase(msg) {
+  if (remoteGame) remoteGame.setPhase(msg.phase, msg);
+  hideBanner();
+  switch (msg.phase) {
     case 'lobby':
-      setPadStatus('En attente du lancement… 🕐');
-      $('padBaby').textContent = '👶';
-      document.body.style.background = myColor + '33';
+      setStatus('En attente du lancement… 🕐');
+      $('phoneReveal').classList.add('hidden');
+      document.body.style.background = '';
       break;
     case 'countdown':
-      setPadStatus('Prépare-toi… 3, 2, 1 !');
-      $('padBaby').textContent = '👶';
+      setStatus('Prépare-toi…');
+      $('phoneReveal').classList.add('hidden');
       vibrate(60);
       break;
     case 'playing':
-      setPadStatus('VOLE ! Appuie pour sauter ⬆️');
-      $('padBaby').textContent = '👶';
+      setStatus('COURS ! Touche l’écran pour sauter ⬆️');
       break;
     case 'failed':
-      setPadStatus('💥 Quelqu’un est tombé… on recommence !');
+      setStatus('On recommence…');
+      showBanner('💥 ' + (msg.name ? '<strong>' + escapeHtml(msg.name) + '</strong> est tombé·e !' : 'Quelqu’un est tombé !') + '<br>Tout le monde recommence 🍼');
       break;
     case 'won':
-      setPadStatus('🎉 Tout le monde est arrivé !');
-      $('padBaby').textContent = '🥳';
+      setStatus('🎉 Tout le monde est arrivé !');
       break;
   }
 }
 
-// gros bouton SAUTER
-const flapBtn = $('flapBtn');
-function flap(e) {
-  e.preventDefault();
-  if (conn && conn.open) conn.send({ type: 'flap' });
-  vibrate(25);
-  flapBtn.classList.add('pressed');
+// ---------- saut : toucher l'écran (ou espace au clavier) ----------
+function jump(e) {
+  if (e) e.preventDefault();
+  if (conn && conn.open) conn.send({ type: 'jump' });
+  vibrate(20);
 }
-flapBtn.addEventListener('touchstart', flap, { passive: false });
-flapBtn.addEventListener('mousedown', flap);
-flapBtn.addEventListener('touchend', () => flapBtn.classList.remove('pressed'));
-flapBtn.addEventListener('mouseup', () => flapBtn.classList.remove('pressed'));
+$('playScreen').addEventListener('touchstart', jump, { passive: false });
+$('playScreen').addEventListener('mousedown', jump);
+window.addEventListener('keydown', e => { if (e.code === 'Space') jump(e); });
 
-function setPadStatus(t) { $('padStatus').textContent = t; }
+// ---------- révélation ----------
+function showReveal(answer) {
+  const boy = answer === 'garcon';
+  $('phoneRevealText').innerHTML = boy ? "C'EST UN<br>GARÇON&nbsp;! 💙" : "C'EST UNE<br>FILLE&nbsp;! 🩷";
+  $('phoneReveal').style.background = boy ? '#bfdbfe' : '#fbcfe8';
+  $('phoneReveal').classList.remove('hidden');
+  vibrate([80, 50, 80, 50, 200]);
+}
+
+// ---------- petites aides ----------
+function setStatus(t) { $('hudStatus').textContent = t; }
 function setJoinStatus(t) { $('joinStatus').textContent = t; }
+
+let bannerTimer = null;
+function showBanner(html) {
+  const b = $('phoneBanner');
+  b.innerHTML = html;
+  b.classList.remove('hidden');
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(hideBanner, 2800);
+}
+function hideBanner() { $('phoneBanner').classList.add('hidden'); }
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 function backToJoin(message) {
   if (peer) { peer.destroy(); peer = null; conn = null; }
-  $('padScreen').classList.add('hidden');
+  $('playScreen').classList.add('hidden');
   $('joinScreen').classList.remove('hidden');
   $('joinBtn').disabled = false;
-  document.body.style.background = '';
   setJoinStatus(message || '');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
 
 function vibrate(pattern) {

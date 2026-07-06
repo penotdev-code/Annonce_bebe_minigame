@@ -69,8 +69,8 @@ function handleMessage(conn, msg) {
     players.set(conn.peer, { id: conn.peer, name, color, conn });
     conn.send({ type: 'joined', name, color });
     refreshLobby();
-  } else if (msg.type === 'flap') {
-    if (game) game.flap(conn.peer);
+  } else if (msg.type === 'jump') {
+    if (game) game.jump(conn.peer);
   }
 }
 
@@ -80,6 +80,7 @@ function dropConnection(conn) {
   players.delete(conn.peer);
   if (game && game.phase !== 'idle') {
     game.removePlayer(conn.peer);
+    broadcast({ type: 'course', course: game.serializeCourse() });
     showBanner('📵 ' + p.name + ' a quitté la partie', 2500);
   }
   refreshLobby();
@@ -131,11 +132,13 @@ $('addTestPlayer').addEventListener('click', () => {
 });
 
 window.addEventListener('keydown', e => {
-  if (e.code === 'Space' && game) { e.preventDefault(); game.flap('local'); }
+  if (e.code === 'Space' && game) { e.preventDefault(); game.jump('local'); }
 });
 
 // ---------- déroulement de la partie ----------
 $('startBtn').addEventListener('click', startGame);
+
+let stateTimer = null;
 
 function startGame() {
   $('lobby').classList.add('hidden');
@@ -143,14 +146,34 @@ function startGame() {
   $('game').classList.remove('hidden');
 
   if (!game) {
-    game = new Game($('gameCanvas'));
+    game = new Game($('gameCanvas'), 'host');
     game.onRoundFailed = onRoundFailed;
     game.onGameWon = onGameWon;
-    game.onPhase = phase => broadcast({ type: 'phase', phase });
+    game.onPhase = sendPhase;
     game.resize();
   }
   const infos = [...players.values()].map(p => ({ id: p.id, name: p.name, color: p.color }));
   game.setup($('setLength').value, $('setDifficulty').value, infos);
+  broadcast({ type: 'course', course: game.serializeCourse() });
+  sendPhase(game.phase);
+
+  // diffusion de l'état aux téléphones (~25 Hz)
+  clearInterval(stateTimer);
+  stateTimer = setInterval(() => {
+    if (game.phase === 'playing' || game.phase === 'countdown') {
+      broadcast({ type: 'st', st: game.snapshot() });
+    }
+  }, 40);
+}
+
+function sendPhase(phase) {
+  const msg = { type: 'phase', phase };
+  if (phase === 'countdown') {
+    msg.t = Math.max(0, Math.round(game.countdownEnd - performance.now()));
+    broadcast({ type: 'course', course: game.serializeCourse() });
+  }
+  if (phase === 'failed' && game.failedPlayer) msg.name = game.failedPlayer.name;
+  broadcast(msg);
 }
 
 function onRoundFailed(player) {
@@ -206,6 +229,7 @@ function showReveal() {
 
 $('replayBtn').addEventListener('click', () => {
   stopConfetti();
+  clearInterval(stateTimer);
   document.body.classList.remove('boy', 'girl');
   $('reveal').classList.add('hidden');
   $('lobby').classList.remove('hidden');

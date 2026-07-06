@@ -163,27 +163,79 @@ body.girl { background: linear-gradient(180deg, #f9a8d4, #fce7f3); }
 #roomInput { letter-spacing: .35em; text-transform: uppercase; }
 .join-status { min-height: 1.4em; font-weight: bold; color: #b45309; }
 
-#padScreen { justify-content: space-between; padding: 18px; }
-#padHeader {
-  width: 100%;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-}
-#padName { font-size: 1.5rem; font-weight: bold; }
-#padStatus { font-size: 1.05rem; text-align: center; min-height: 1.3em; }
-#padBaby { font-size: 4.5rem; }
+/* ---------- écran de jeu du téléphone ---------- */
+#playScreen { position: fixed; inset: 0; -webkit-tap-highlight-color: transparent; }
+#playCanvas { display: block; width: 100vw; height: 100vh; height: 100dvh; }
 
-#flapBtn {
-  width: min(78vw, 55vh);
-  height: min(78vw, 55vh);
-  border-radius: 50%;
-  border: none;
-  background: #ff6b6b;
-  color: #fff;
-  font-family: inherit;
-  font-size: 2.4rem;
-  font-weight: bold;
-  box-shadow: 0 10px 0 rgba(0,0,0,.2), 0 16px 40px rgba(0,0,0,.25);
-  margin-bottom: 5vh;
-  -webkit-tap-highlight-color: transparent;
+#hud {
+  position: fixed; top: 8px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  pointer-events: none;
+  max-width: 96vw;
 }
-#flapBtn.pressed { transform: translateY(8px); box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+#hudName {
+  color: #fff; font-weight: bold; font-size: 1rem;
+  background: #ff6b6b;
+  padding: 5px 14px; border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  white-space: nowrap;
+}
+#hudStatus {
+  font-size: .95rem; font-weight: bold; color: #1e3a5f;
+  background: rgba(255,255,255,.8);
+  padding: 5px 14px; border-radius: 999px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+#tapHint {
+  position: fixed; bottom: 10px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem; font-weight: bold; color: #1e3a5f;
+  background: rgba(255,255,255,.75);
+  padding: 6px 16px; border-radius: 999px;
+  pointer-events: none;
+  animation: wobble 1.6s infinite;
+}
+
+#phoneBanner {
+  position: fixed; top: 22%; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,.94);
+  border: 3px solid #ff9db8;
+  border-radius: 18px;
+  padding: 14px 22px;
+  font-size: 1.15rem; text-align: center;
+  box-shadow: 0 8px 24px rgba(30,58,95,.25);
+  pointer-events: none;
+  animation: pop .35s ease-out;
+  max-width: 86vw;
+}
+
+#rotateHint { display: none; }
+@media (orientation: portrait) {
+  #playScreen #rotateHint {
+    display: block;
+    position: fixed; top: 45%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30,58,95,.92); color: #fff;
+    font-size: 1.3rem; font-weight: bold; text-align: center;
+    padding: 18px 26px; border-radius: 18px;
+    pointer-events: none;
+    animation: wobble 1.6s infinite;
+    max-width: 82vw;
+  }
+}
+
+#phoneReveal {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  z-index: 20;
+}
+#phoneRevealText {
+  font-size: clamp(2.2rem, 9vw, 4rem);
+  font-weight: bold; color: #1e3a5f;
+  text-shadow: 3px 3px 0 rgba(255,255,255,.8);
+  animation: zoomIn .8s cubic-bezier(.2, 1.6, .4, 1);
+}

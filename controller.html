@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Bébé en Voyage 👶 — Manette</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Bébé en Voyage 👶 — Joueur</title>
 <link rel="stylesheet" href="style.css">
 <script src="vendor/peerjs.min.js"></script>
 </head>
@@ -19,16 +19,22 @@
     <p id="joinStatus" class="join-status"></p>
   </div>
 
-  <!-- ÉCRAN MANETTE -->
-  <div id="padScreen" class="pscreen hidden">
-    <div id="padHeader">
-      <span id="padName"></span>
-      <span id="padStatus">En attente du lancement…</span>
+  <!-- ÉCRAN JEU (plein écran, tape pour sauter) -->
+  <div id="playScreen" class="hidden">
+    <canvas id="playCanvas"></canvas>
+    <div id="hud">
+      <span id="hudName"></span>
+      <span id="hudStatus">En attente du lancement…</span>
     </div>
-    <div id="padBaby">👶</div>
-    <button id="flapBtn">SAUTER&nbsp;!</button>
+    <div id="tapHint">👆 Touche l'écran pour SAUTER</div>
+    <div id="phoneBanner" class="hidden"></div>
+    <div id="rotateHint">🔄 Tourne ton téléphone en mode paysage&nbsp;!</div>
+    <div id="phoneReveal" class="hidden">
+      <div id="phoneRevealText"></div>
+    </div>
   </div>
 
+<script src="game.js"></script>
 <script src="controller.js"></script>
 </body>
 </html>
