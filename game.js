@@ -24,8 +24,8 @@ const PLAYER_COLORS = ['#ff6b6b', '#4ecdc4', '#ffd93d', '#a78bfa',
 
 const H = 900;                 // hauteur logique du monde
 const GROUND_Y = H - 130;      // sol
-const GRAVITY = 3000;
-const JUMP_V = -1180;
+const GRAVITY = 2350;
+const JUMP_V = -1250;
 const BABY_W = 58, BABY_H = 66; // boîte de collision du bébé
 
 // Obstacles jouets : hauteur [min,max], largeur = h * wr * répétitions
